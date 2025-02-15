@@ -1,7 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { requireUser } from '@/lib/auth';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  CardActionArea,
+} from '@mui/material';
+import Link from 'next/link';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SignOutButton from '../components/SignOutButton';
 
-export default async function UserDashboard() {
+export default async function UserLanding() {
+  await requireUser();
   const supabase = createClient();
 
   const {
@@ -19,69 +36,132 @@ export default async function UserDashboard() {
     .single();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold">User Dashboard</h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                Welcome, {profile?.full_name || user.email}
-              </span>
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <Container maxWidth="lg">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Welcome, {profile?.full_name || user.email}
+        </Typography>
+        
+        <Grid container spacing={3}>
+          {/* Quick Actions */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h6" gutterBottom>
+                Quick Actions
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea component={Link} href="/user/profile">
+                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <AccountCircleIcon sx={{ fontSize: 40 }} />
+                        <Box>
+                          <Typography variant="h6">View Profile</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Update your personal information and preferences
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea component={Link} href="/user/dashboard">
+                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <DashboardIcon sx={{ fontSize: 40 }} />
+                        <Box>
+                          <Typography variant="h6">My Dashboard</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Access your personalized dashboard
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardActionArea component={Link} href="/user/settings">
+                      <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <SettingsIcon sx={{ fontSize: 40 }} />
+                        <Box>
+                          <Typography variant="h6">Settings</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Manage your account settings
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Card>
+                    <CardContent>
+                      <SignOutButton />
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-lg font-medium">Your Profile</h2>
-              <div className="mt-4">
-                <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Email</dt>
-                    <dd className="mt-1 text-sm text-gray-900">{user.email}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Full Name</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {profile?.full_name || 'Not set'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Role</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {profile?.role || 'User'}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Last Updated</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {profile?.updated_at
-                        ? new Date(profile.updated_at).toLocaleDateString()
-                        : 'Never'}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+          {/* Recent Activity */}
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, height: '100%' }}>
+              <Typography variant="h6" gutterBottom>
+                Recent Activity
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1" color="text.secondary">
+                  No recent activity to display
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* System Status */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                System Status
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Account Status</Typography>
+                      <Typography variant="body2" color="success.main">
+                        Active
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Last Login</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date().toLocaleDateString()}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Role</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {profile?.role || 'User'}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
   );
 }

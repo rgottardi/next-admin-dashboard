@@ -93,6 +93,25 @@ export default function AdminLayout({
     setOpen(!open);
   };
 
+  const handleSignOut = async () => {
+    try {
+      const res = await fetch('/auth/signout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error('Failed to sign out');
+      }
+
+      window.location.href = '/auth/login';
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
@@ -148,7 +167,7 @@ export default function AdminLayout({
         <Divider />
         <List>
           <ListItem disablePadding>
-            <ListItemButton component="a" href="/auth/signout">
+            <ListItemButton onClick={handleSignOut}>
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>

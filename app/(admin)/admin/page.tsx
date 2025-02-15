@@ -1,7 +1,24 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { requireAdmin } from '@/lib/auth';
+import {
+  Box,
+  Container,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+  Button,
+} from '@mui/material';
+import Link from 'next/link';
+import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
+import SecurityIcon from '@mui/icons-material/Security';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
 
-export default async function AdminDashboard() {
+export default async function AdminLanding() {
+  await requireAdmin();
   const supabase = createClient();
 
   const {
@@ -18,57 +35,160 @@ export default async function AdminDashboard() {
     .eq('id', user.id)
     .single();
 
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold">Admin Dashboard</h1>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <span className="text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-                Welcome, {profile?.full_name || user.email}
-              </span>
-              <form action="/auth/signout" method="post">
-                <button
-                  type="submit"
-                  className="ml-4 px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </nav>
+  // Get total users count
+  const { count: usersCount } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true });
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg h-96">
-            {/* Dashboard content will go here */}
-            <div className="p-4">
-              <h2 className="text-2xl font-bold mb-4">Dashboard Overview</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium">Users</h3>
-                  <p className="text-3xl font-bold mt-2">0</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium">Active Sessions</h3>
-                  <p className="text-3xl font-bold mt-2">0</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-medium">Total Actions</h3>
-                  <p className="text-3xl font-bold mt-2">0</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+  return (
+    <Container maxWidth="lg">
+      <Box sx={{ mt: 4, mb: 4 }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          Admin Control Center
+        </Typography>
+        
+        <Grid container spacing={3}>
+          {/* Quick Stats */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                System Overview
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Total Users</Typography>
+                      <Typography variant="h4">{usersCount || 0}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Active Sessions</Typography>
+                      <Typography variant="h4">--</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">System Status</Typography>
+                      <Typography variant="h4" color="success.main">OK</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Typography variant="h6">Last Backup</Typography>
+                      <Typography variant="h4">--</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Admin Actions */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Administrative Actions
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <PeopleIcon sx={{ fontSize: 40 }} />
+                        <Typography variant="h6">User Management</Typography>
+                        <Button
+                          component={Link}
+                          href="/admin/users"
+                          variant="contained"
+                          fullWidth
+                        >
+                          Manage Users
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <SettingsIcon sx={{ fontSize: 40 }} />
+                        <Typography variant="h6">Settings</Typography>
+                        <Button
+                          component={Link}
+                          href="/admin/settings"
+                          variant="contained"
+                          fullWidth
+                        >
+                          System Settings
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <SecurityIcon sx={{ fontSize: 40 }} />
+                        <Typography variant="h6">Security</Typography>
+                        <Button
+                          component={Link}
+                          href="/admin/security"
+                          variant="contained"
+                          fullWidth
+                        >
+                          Security Settings
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Card>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                        <AnalyticsIcon sx={{ fontSize: 40 }} />
+                        <Typography variant="h6">Analytics</Typography>
+                        <Button
+                          component={Link}
+                          href="/admin/analytics"
+                          variant="contained"
+                          fullWidth
+                        >
+                          View Analytics
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+
+          {/* Recent Activity */}
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Recent System Activity
+              </Typography>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body1" color="text.secondary">
+                  No recent activity to display
+                </Typography>
+              </Box>
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
   );
 }

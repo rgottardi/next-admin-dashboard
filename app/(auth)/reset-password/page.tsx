@@ -1,115 +1,96 @@
 'use client';
 
+import { createClient } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-import { 
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  Box,
-  Link as MuiLink
-} from '@mui/material';
-import Link from 'next/link';
+import { Box, Button, Container, TextField, Typography } from '@mui/material';
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
+    const supabase = createClient();
 
-      if (error) {
-        setError(error.message);
-      } else {
-        setSuccess(true);
-      }
-    } catch (err) {
-      setError('An unexpected error occurred');
-    } finally {
-      setLoading(false);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/update-password`,
+    });
+
+    if (error) {
+      setError(error.message);
+      return;
     }
+
+    setSuccess(true);
   };
 
   if (success) {
     return (
-      <Container maxWidth="sm">
-        <Box sx={{ mt: 8, mb: 4 }}>
-          <Paper elevation={3} sx={{ p: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <Typography variant="h5" component="h1" gutterBottom>
-              Password Reset Email Sent
-            </Typography>
-            <Typography align="center">
-              Check your email for a link to reset your password. If it doesn't appear within a few minutes, check your spam folder.
-            </Typography>
-            <Button
-              component={Link}
-              href="/auth/login"
-              variant="contained"
-              sx={{ mt: 2 }}
-            >
-              Return to Login
-            </Button>
-          </Paper>
+      <Container component="main" maxWidth="xs">
+        <Box
+          sx={{
+            marginTop: 8,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}
+        >
+          <Typography component="h1" variant="h5">
+            Check your email
+          </Typography>
+          <Typography sx={{ mt: 2 }}>
+            We have sent you a password reset link. Please check your email.
+          </Typography>
         </Box>
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h5" component="h1" gutterBottom align="center">
-            Reset Password
-          </Typography>
-          <Typography variant="body2" align="center" sx={{ mb: 3 }}>
-            Enter your email address and we'll send you a link to reset your password.
-          </Typography>
-          <form onSubmit={handleResetPassword}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 2 }}>
-                {error}
-              </Alert>
-            )}
-            <TextField
-              label="Email Address"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-              disabled={loading}
-            >
-              {loading ? 'Sending...' : 'Send Reset Link'}
-            </Button>
-            <Box sx={{ textAlign: 'center' }}>
-              <MuiLink component={Link} href="/auth/login" variant="body2">
-                Back to Login
-              </MuiLink>
-            </Box>
-          </form>
-        </Paper>
+    <Container component="main" maxWidth="xs">
+      <Box
+        sx={{
+          marginTop: 8,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
+      >
+        <Typography component="h1" variant="h5">
+          Reset Password
+        </Typography>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <TextField
+            margin="normal"
+            required
+            fullWidth
+            id="email"
+            label="Email Address"
+            name="email"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          {error && (
+            <Typography color="error" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
+          )}
+          <Button
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+          >
+            Send Reset Link
+          </Button>
+        </Box>
       </Box>
     </Container>
   );

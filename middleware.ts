@@ -1,55 +1,97 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
 
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Auth condition handling
-  if (!session) {
-    // Handle auth routes
-    if (req.nextUrl.pathname.startsWith('/auth')) {
-      return res;
+  // If user is not logged in and trying to access protected routes
+  if (
+    !user &&
+    !request.nextUrl.pathname.startsWith('/auth/login') &&
+    !request.nextUrl.pathname.startsWith('/auth/signout')
+  ) {
+    const redirectUrl = new URL('/auth/login', request.url)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // If user is logged in, get their role
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const userRole = profile?.role || 'user'
+
+    // Redirect from login/register pages if already logged in
+    if (
+      request.nextUrl.pathname.startsWith('/auth/login') ||
+      request.nextUrl.pathname === '/'
+    ) {
+      const redirectUrl = new URL(
+        userRole === 'admin' ? '/admin' : '/user',
+        request.url
+      )
+      return NextResponse.redirect(redirectUrl)
     }
-    // Redirect to login if accessing protected routes
-    if (req.nextUrl.pathname.startsWith('/admin') || req.nextUrl.pathname.startsWith('/user')) {
-      return NextResponse.redirect(new URL('/auth/login', req.url));
+
+    // Protect admin routes
+    if (
+      request.nextUrl.pathname.startsWith('/admin') &&
+      userRole !== 'admin'
+    ) {
+      const redirectUrl = new URL('/user', request.url)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Protect user routes from admin (optional, remove if admins should access user routes)
+    if (
+      request.nextUrl.pathname.startsWith('/user') &&
+      userRole === 'admin'
+    ) {
+      const redirectUrl = new URL('/admin', request.url)
+      return NextResponse.redirect(redirectUrl)
     }
   }
 
-  // Role-based access control
-  if (session) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    // Redirect from auth routes if already logged in
-    if (req.nextUrl.pathname.startsWith('/auth')) {
-      return NextResponse.redirect(new URL('/admin', req.url));
-    }
-
-    // Handle admin routes
-    if (req.nextUrl.pathname.startsWith('/admin')) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user?.id)
-        .single();
-
-      if (profile?.role !== 'admin') {
-        return NextResponse.redirect(new URL('/user', req.url));
-      }
-    }
-  }
-
-  return res;
+  return response
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
-};
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}
