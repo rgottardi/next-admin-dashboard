@@ -29,7 +29,7 @@ export default function AdminLayout({
       });
 
       if (res.ok) {
-        window.location.href = '/auth/login';
+        window.location.href = '/login';
       }
     } catch (error) {
       console.error('Error signing out:', error);

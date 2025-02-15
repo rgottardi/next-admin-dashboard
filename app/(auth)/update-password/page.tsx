@@ -25,7 +25,7 @@ export default function UpdatePasswordPage() {
       return;
     }
 
-    router.push('/auth/login');
+    router.push('/login');
     router.refresh();
   };
 

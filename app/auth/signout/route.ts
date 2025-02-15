@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   await supabase.auth.signOut()
 
   // Create response with redirect
-  const response = NextResponse.redirect(new URL('/auth/login', request.url), {
+  const response = NextResponse.redirect(new URL('/login', request.url), {
     status: 302,
   })
 
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
 // Also handle GET requests by redirecting to login
 export async function GET(request: Request) {
-  return NextResponse.redirect(new URL('/auth/login', request.url), {
+  return NextResponse.redirect(new URL('/login', request.url), {
     status: 302,
   })
 }

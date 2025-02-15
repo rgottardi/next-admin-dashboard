@@ -13,11 +13,9 @@ export default function SignOutButton() {
         },
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to sign out');
+      if (res.ok) {
+        window.location.href = '/login';
       }
-
-      window.location.href = '/auth/login';
     } catch (error) {
       console.error('Error signing out:', error);
     }

@@ -16,7 +16,7 @@ export default function HomePage() {
       if (user) {
         router.push('/admin');
       } else {
-        router.push('/auth/login');
+        router.push('/login');
       }
     };
 

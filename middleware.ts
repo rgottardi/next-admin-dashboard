@@ -32,10 +32,10 @@ export async function middleware(request: NextRequest) {
   // If user is not logged in and trying to access protected routes
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/auth/login') &&
+    !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/auth/signout')
   ) {
-    const redirectUrl = new URL('/auth/login', request.url)
+    const redirectUrl = new URL('/login', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -51,7 +51,7 @@ export async function middleware(request: NextRequest) {
 
     // Redirect from login/register pages if already logged in
     if (
-      request.nextUrl.pathname.startsWith('/auth/login') ||
+      request.nextUrl.pathname.startsWith('/login') ||
       request.nextUrl.pathname === '/'
     ) {
       const redirectUrl = new URL(
